@@ -1,9 +1,8 @@
-from flask import Flask, flash, Blueprint, send_file, render_template, request, redirect
+from flask import Flask, flash, Blueprint, Response, render_template, request, redirect
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, PasswordField
 from wtforms.validators import DataRequired, InputRequired
 from Mystore import db
-import os
 from flask_wtf.csrf import CSRFProtect
 
 
@@ -72,18 +71,20 @@ def add_text12():
 def download_text12():
     text_to_download = Text12.query.first()
     if text_to_download:
-        # Construct the absolute path to the downloaded file
-        file_path = os.path.join(app.root_path, 'downloaded_text12.txt')
+        content = text_to_download.content.encode('utf-8')
+        filename = 'downloaded_text12.txt'
 
-        # Create a TXT file and provide it for download
-        with open(file_path, 'w') as txt_file:
-            txt_file.write(text_to_download.content)
-
-        # Delete the downloaded text from the database
         db.session.delete(text_to_download)
         db.session.commit()
 
-        return send_file(file_path, as_attachment=True)
+        return Response(
+            content,
+            mimetype='text/plain',
+            headers={
+                'Content-Disposition': f'attachment; filename="{filename}"',
+                'Content-Length': len(content)
+            }
+        )
     else:
         return "No more texts to download."
 
@@ -102,19 +103,20 @@ def download_after_payment():
         text_to_download = Text12.query.first()
 
         if text_to_download:
-            # Construct the absolute path to the downloaded file
-            file_path = os.path.join(app.root_path, 'downloaded_text12.txt')
+            content = text_to_download.content.encode('utf-8')
+            filename = 'downloaded_text12.txt'
 
-            # Create a TXT file and provide it for download
-            with open(file_path, 'w') as txt_file:
-                txt_file.write(text_to_download.content)
-
-            # Delete the downloaded text from the database
             db.session.delete(text_to_download)
             db.session.commit()
 
-            # Send the file for download
-            return send_file(file_path, as_attachment=True)
+            return Response(
+                content,
+                mimetype='text/plain',
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"',
+                    'Content-Length': len(content)
+                }
+            )
         else:
             return "No more texts to download."
     else:
